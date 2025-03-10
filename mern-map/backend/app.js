@@ -25,8 +25,8 @@ app.get("/api/autocomplete", async (req, res) => {
 });
 
 // Route computation endpoint
-app.get("/api/route", async (req, res) => {
-  const { origin, destination } = req.query;
+app.post("/api/route", async (req, res) => {
+  const { origin, destination } = req.body; // Getting the origin and destination from the request body
   const url = `https://routes.googleapis.com/directions/v2:computeRoutes?key=${GOOGLE_API_KEY}`;
 
   const requestBody = {
@@ -36,19 +36,21 @@ app.get("/api/route", async (req, res) => {
     destination: {
       address: destination, // where the user is going to
     },
-    travelMode: "DRIVING", // the mode of travel
+    travelMode: "DRIVE", // the mode of travel
   };
 
   try {
     const response = await axios.post(url, requestBody, {
       headers: {
         "Content-Type": "application/json",
+        "X-Goog-FieldMask":
+          "routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline",
       },
     });
     res.json(response.data);
   } catch (error) {
     res.status(500).json({ error: "Error computing route" });
-    console.log(error);
+    console.log(error, error.response ? error.response.data : error.message);
   }
 });
 
