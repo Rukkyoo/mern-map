@@ -120,10 +120,11 @@ function App() {
               placeholder="Where are you going to?"
             ></input>
           </div>
-          <button className="bg-slate-200 rounded-md p-1 cursor-pointer">
+          
+        </div> */}
+        <button className="bg-slate-200 mt-10 rounded-md p-1 cursor-pointer">
             Calculate Route
           </button>
-        </div> */}
       </form>
     </div>
   );
