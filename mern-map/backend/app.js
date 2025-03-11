@@ -11,7 +11,7 @@ app.use(express.json());
 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
-// Route computation endpoint
+// Auto complete endpoint
 app.get("/api/autocomplete", async (req, res) => {
   const { input } = req.query; // Getting the input from the query string
   const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${input}&key=${GOOGLE_API_KEY}`;
