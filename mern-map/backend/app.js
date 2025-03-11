@@ -12,15 +12,37 @@ app.use(express.json());
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
 // Auto complete endpoint
-app.get("/api/autocomplete", async (req, res) => {
-  const { input } = req.query; // Getting the input from the query string
-  const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${input}&key=${GOOGLE_API_KEY}`;
+app.post("/api/autocomplete", async (req, res) => {
+  const { input } = req.body; // Getting the input from the request body
+  const locationBias = {
+    circle: {
+      center: {
+        latitude: 37.76999,
+        longitude: -122.44696,
+      },
+      radius: 500.0,
+    },
+  };
+
   try {
-    const response = await axios.get(url);
+    const response = await axios.post(
+      `https://places.googleapis.com/v1/places:autocomplete?key=${GOOGLE_API_KEY}`,
+      {
+        input: input,
+        locationBias: locationBias,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": GOOGLE_API_KEY,
+          "X-Goog-FieldMask": "suggestions.placePrediction.text",
+        },
+      }
+    );
     res.json(response.data);
   } catch (error) {
     res.status(500).json({ error: "Error fetching autocomplete suggestions" });
-    console.log(error);
+    console.log(error, error.response ? error.response.data : error.message);
   }
 });
 
