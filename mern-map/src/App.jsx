@@ -31,10 +31,29 @@ function App() {
     }
   };
 
-  // Handles the change event for the input field
-  const handleAutoCompleteChange = (e) => {
-    setInput(e.target.value);
-    fetchSuggestions(e.target.value);
+  // Route Computation
+  const computeRoute = async () => {
+    try {
+      const response = await axiosInstance.post("/route", {
+        origin,
+        destination,
+      });
+      setRoute(response.data.routes[0]);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // Handles the change event for the origin input field
+  const handleOriginChange = (value) => {
+    setOrigin(value);
+    fetchSuggestions(value);
+  };
+
+  // Handles the change event for the destination input field
+  const handleDestinationChange = (value) => {
+    setDestination(value);
+    fetchSuggestions(value);
   };
 
   // Handles the click event for the suggestion
@@ -47,14 +66,25 @@ function App() {
     <div className="bg-black h-screen flex justify-center">
       <form className="my-10 flex flex-col items-center">
         <label className="mb-3" for="search">
-          <span className="mb-10 text-white">Check Map: </span>{" "}
+          <span className="mb-10 text-white">Current Location: </span>{" "}
         </label>
         <input
           type="search"
-          onChange={handleAutoCompleteChange}
-          value={input}
+          onChange={(e) => handleOriginChange(e.target.value)}
+          value={origin}
           class="p-1 mb-2 w-80 text-sm text-gray-700 bg-gray-200 border border-white rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-600"
-          placeholder="Search..."
+          placeholder="Where are you coming from?"
+        ></input>
+
+        <label className="mb-3" for="search">
+          <span className="mb-10 text-white">Destination: </span>{" "}
+        </label>
+        <input
+          type="search"
+          onChange={(e) => handleDestinationChange(e.target.value)}
+          value={destination}
+          class="p-1 mb-2 w-80 text-sm text-gray-700 bg-gray-200 border border-white rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-600"
+          placeholder="Where are you going to?"
         ></input>
 
         <ul>
@@ -68,7 +98,7 @@ function App() {
             </li>
           ))}
         </ul>
-        <div className="flex flex-row mt-8 justify-between px-2 items-center w-screen">
+        {/*  <div className="flex flex-col mt-8 justify-between px-2 items-center w-screen">
           {" "}
           <div>
             <label className="mb-1 mt-6" for="origin">
@@ -90,7 +120,10 @@ function App() {
               placeholder="Where are you going to?"
             ></input>
           </div>
-        </div>
+          <button className="bg-slate-200 rounded-md p-1 cursor-pointer">
+            Calculate Route
+          </button>
+        </div> */}
       </form>
     </div>
   );
