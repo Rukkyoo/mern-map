@@ -9,11 +9,12 @@ function App() {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [route, setRoute] = useState(null);
+  const [activeInput, setActiveInput] = useState(null); // Track which input is active
 
   // Fetching the autocomplete suggestions
   const fetchSuggestions = async (input) => {
     try {
-      const response = await axiosInstance.post("/", {
+      const response = await axiosInstance.post("/autocomplete", {
         input,
         locationBias: {
           circle: {
@@ -39,6 +40,7 @@ function App() {
         destination,
       });
       setRoute(response.data.routes[0]);
+      console.log(response.data.routes[0]);
     } catch (error) {
       console.log(error);
     }
@@ -47,24 +49,37 @@ function App() {
   // Handles the change event for the origin input field
   const handleOriginChange = (value) => {
     setOrigin(value);
+    setActiveInput("origin"); // Set the active input to origin
     fetchSuggestions(value);
   };
 
   // Handles the change event for the destination input field
   const handleDestinationChange = (value) => {
     setDestination(value);
+    setActiveInput("destination"); // Set the active input to destination
     fetchSuggestions(value);
   };
 
   // Handles the click event for the suggestion
   const handleSuggestionClick = (suggestion) => {
-    setInput(suggestion.placePrediction.text.text);
+    const selectedText = suggestion.placePrediction.text.text;
+    if (activeInput === "origin") {
+      setOrigin(selectedText);
+    } else if (activeInput === "destination") {
+      setDestination(selectedText);
+    }
     setSuggestions([]);
   };
 
   return (
     <div className="bg-black h-screen flex justify-center">
-      <form className="my-10 flex flex-col items-center">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          computeRoute();
+        }}
+        className="my-10 flex flex-col items-center"
+      >
         <label className="mb-3" for="search">
           <span className="mb-10 text-white">Current Location: </span>{" "}
         </label>
@@ -98,33 +113,12 @@ function App() {
             </li>
           ))}
         </ul>
-        {/*  <div className="flex flex-col mt-8 justify-between px-2 items-center w-screen">
-          {" "}
-          <div>
-            <label className="mb-1 mt-6" for="origin">
-              <span className="mb-10 text-white">Origin: </span>{" "}
-            </label>
-            <input
-              className="p-1 mb-2 w-55 text-sm text-gray-700 bg-gray-200 border border-white rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-600"
-              type="search"
-              placeholder="Where are you coming from?"
-            ></input>
-          </div>
-          <div>
-            <label className="mb-1 mt-6" for="origin">
-              <span className="mb-10 text-white">Destination: </span>{" "}
-            </label>
-            <input
-              className="p-1 mb-2 w-55 text-sm text-gray-700 bg-gray-200 border border-white rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-600"
-              type="search"
-              placeholder="Where are you going to?"
-            ></input>
-          </div>
-          
-        </div> */}
-        <button className="bg-slate-200 mt-10 rounded-md p-1 cursor-pointer">
-            Calculate Route
-          </button>
+        <button
+          type="submit"
+          className="bg-slate-200 mt-10 rounded-md p-1 cursor-pointer"
+        >
+          Calculate Route
+        </button>
       </form>
     </div>
   );
