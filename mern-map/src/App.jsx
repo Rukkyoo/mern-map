@@ -9,6 +9,7 @@ function App() {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [route, setRoute] = useState(null);
+  const [showRoute, setShowRoute] = useState(false);
   const [activeInput, setActiveInput] = useState(null); // Track which input is active
 
   // Fetching the autocomplete suggestions
@@ -39,8 +40,8 @@ function App() {
         origin,
         destination,
       });
+      console.log(response.data.routes[0].distanceMeters);
       setRoute(response.data.routes[0]);
-      console.log(response.data.routes[0]);
     } catch (error) {
       console.log(error);
     }
@@ -72,11 +73,12 @@ function App() {
   };
 
   return (
-    <div className="bg-black h-screen flex justify-center">
+    <div className="bg-black h-screen flex flex-col items-center">
       <form
         onSubmit={(e) => {
           e.preventDefault();
           computeRoute();
+          setShowRoute(true);
         }}
         className="my-10 flex flex-col items-center"
       >
@@ -120,6 +122,13 @@ function App() {
           Calculate Route
         </button>
       </form>
+      {showRoute && route && (
+        <div className="text-white mt-5 text-center">
+          <h2 className="text-bold">Route Details</h2>
+          <p>Distance: {route.distanceMeters} meters</p>
+          <p>Duration: {route.duration} seconds</p>
+        </div>
+      )}
     </div>
   );
 }
