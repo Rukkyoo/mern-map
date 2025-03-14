@@ -1,41 +1,17 @@
 import "./App.css";
-import React, { useState, useMemo } from "react";
-import axios from "axios";
+import React, { useState } from "react";
 import axiosInstance from "./axiosInstance";
-import { decode, encode } from "@googlemaps/polyline-codec";
-/* import {
-  GoogleMap,
-  useLoadScript,
-  DirectionsService,
-  DirectionsRenderer,
-  Polyline,
-} from "@react-google-maps/api";
-
-const mapContainerStyle = {
-  width: "100%",
-  height: "400px",
-};
-
-const center = {
-  lat: 37.7749, // Default center (San Francisco)
-  lng: -122.4194,
-}; */
 
 function App() {
-  const [input, setInput] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
   const [route, setRoute] = useState(null);
   const [showRoute, setShowRoute] = useState(false);
-  const [activeInput, setActiveInput] = useState(null); // Track which input is active
-  /*   const [path, setPath] = useState([]);
+  const [activeInput, setActiveInput] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
-  }); */
-
-  // Fetching the autocomplete suggestions
   const fetchSuggestions = async (input) => {
     try {
       const response = await axiosInstance.post("/autocomplete", {
@@ -52,44 +28,40 @@ function App() {
       });
       setSuggestions(response.data.suggestions);
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching suggestions:", error);
     }
   };
 
-  // Route Computation
   const computeRoute = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const response = await axiosInstance.post("/route", {
         origin,
         destination,
       });
-      console.log(response.data.routes[0].distanceMeters);
       setRoute(response.data.routes[0]);
-      // Decode the polyline
-      /*       const decodedPath = decode(route.polyline.encodedPolyline);
-      setPath(decodedPath.map(([lat, lng]) => ({ lat, lng }))); */
+      setShowRoute(true);
     } catch (error) {
-      console.log(error);
+      setError("Failed to compute route. Please try again.");
+      console.error("Error computing route:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Decode the polyline
-
-  // Handles the change event for the origin input field
   const handleOriginChange = (value) => {
     setOrigin(value);
-    setActiveInput("origin"); // Set the active input to origin
+    setActiveInput("origin");
     fetchSuggestions(value);
   };
 
-  // Handles the change event for the destination input field
   const handleDestinationChange = (value) => {
     setDestination(value);
-    setActiveInput("destination"); // Set the active input to destination
+    setActiveInput("destination");
     fetchSuggestions(value);
   };
 
-  // Handles the click event for the suggestion
   const handleSuggestionClick = (suggestion) => {
     const selectedText = suggestion.placePrediction.text.text;
     if (activeInput === "origin") {
@@ -100,85 +72,82 @@ function App() {
     setSuggestions([]);
   };
 
-  /*   if (loadError) return <div>Error loading maps</div>;
-  if (!isLoaded) return <div>Loading Maps...</div>; */
-
-
   return (
-    <div className="bg-black h-screen flex flex-col items-center">
+    <div className="bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4">
       <form
         onSubmit={(e) => {
           e.preventDefault();
           computeRoute();
-          setShowRoute(true);
         }}
-        className="my-10 flex flex-col items-center"
+        className="w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-lg"
       >
-        <label className="mb-3" for="search">
-          <span className="mb-10 text-white">Current Location: </span>{" "}
-        </label>
-        <input
-          type="search"
-          onChange={(e) => handleOriginChange(e.target.value)}
-          value={origin}
-          class="p-1 mb-2 w-80 text-sm text-gray-700 bg-gray-200 border border-white rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-600"
-          placeholder="Where are you coming from?"
-        ></input>
+        <div className="mb-4">
+          <label className="block text-gray-300 text-sm font-bold mb-2">
+            Current Location:
+          </label>
+          <input
+            type="search"
+            onChange={(e) => handleOriginChange(e.target.value)}
+            value={origin}
+            className="w-full p-2 text-sm text-gray-700 bg-gray-200 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Where are you coming from?"
+          />
+        </div>
 
-        <label className="mb-3" for="search">
-          <span className="mb-10 text-white">Destination: </span>{" "}
-        </label>
-        <input
-          type="search"
-          onChange={(e) => handleDestinationChange(e.target.value)}
-          value={destination}
-          class="p-1 mb-2 w-80 text-sm text-gray-700 bg-gray-200 border border-white rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-600"
-          placeholder="Where are you going to?"
-        ></input>
+        <div className="mb-4">
+          <label className="block text-gray-300 text-sm font-bold mb-2">
+            Destination:
+          </label>
+          <input
+            type="search"
+            onChange={(e) => handleDestinationChange(e.target.value)}
+            value={destination}
+            className="w-full p-2 text-sm text-gray-700 bg-gray-200 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Where are you going to?"
+          />
+        </div>
 
-        <ul>
-          {suggestions.map((suggestion) => (
-            <li
-              key={suggestion.placePrediction.place_id}
-              onClick={() => handleSuggestionClick(suggestion)}
-              className="cursor-pointer  w-80 bg-slate-200 hover:bg-gray-300"
-            >
-              {suggestion.placePrediction.text.text}
-            </li>
-          ))}
-        </ul>
+        {suggestions.length > 0 && (
+          <ul className="mt-2 bg-gray-700 rounded-md shadow-md">
+            {suggestions.map((suggestion) => (
+              <li
+                key={suggestion.placePrediction.place_id}
+                onClick={() => handleSuggestionClick(suggestion)}
+                className="p-2 text-gray-300 hover:bg-gray-600 cursor-pointer"
+              >
+                {suggestion.placePrediction.text.text}
+              </li>
+            ))}
+          </ul>
+        )}
+
         <button
           type="submit"
-          className="bg-slate-200 mt-10 rounded-md p-1 cursor-pointer"
+          disabled={loading}
+          className="w-full mt-4 bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          Calculate Route
+          {loading ? "Calculating..." : "Calculate Route"}
         </button>
+
+        {error && (
+          <div className="mt-4 text-red-500 text-sm text-center">{error}</div>
+        )}
       </form>
+
       {showRoute && route && (
-        <div className="text-white mt-5 text-center">
-          <h2 className="text-bold">Route Details</h2>
-          <p>Distance: {route.distanceMeters} meters</p>
-          <p>Duration: {route.duration}</p>{" "}
+        <div className="mt-6 w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-lg text-white">
+          <h2 className="text-xl font-bold mb-4">Route Details</h2>
+          <div className="space-y-2">
+            <p className="text-sm">
+              <span className="font-semibold">Distance:</span>{" "}
+              {route.distanceMeters} meters
+            </p>
+            <p className="text-sm">
+              <span className="font-semibold">Duration:</span> {route.duration}
+            </p>
+          </div>
         </div>
       )}
-      {/*       <div className="mt-5 w-full px-4">
-        <GoogleMap
-          mapContainerStyle={mapContainerStyle}
-          zoom={12}
-          center={center}
-        >
-          {path.length > 0 && (
-            <Polyline
-              path={path}
-              options={{
-                strokeColor: "#FF0000",
-                strokeOpacity: 1.0,
-                strokeWeight: 2,
-              }}
-            />
-          )}
-        </GoogleMap>
-      </div> */}
     </div>
   );
 }
