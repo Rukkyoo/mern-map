@@ -1,8 +1,25 @@
 import "./App.css";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import axios from "axios";
 import axiosInstance from "./axiosInstance";
 import { decode, encode } from "@googlemaps/polyline-codec";
+/* import {
+  GoogleMap,
+  useLoadScript,
+  DirectionsService,
+  DirectionsRenderer,
+  Polyline,
+} from "@react-google-maps/api";
+
+const mapContainerStyle = {
+  width: "100%",
+  height: "400px",
+};
+
+const center = {
+  lat: 37.7749, // Default center (San Francisco)
+  lng: -122.4194,
+}; */
 
 function App() {
   const [input, setInput] = useState("");
@@ -12,6 +29,11 @@ function App() {
   const [route, setRoute] = useState(null);
   const [showRoute, setShowRoute] = useState(false);
   const [activeInput, setActiveInput] = useState(null); // Track which input is active
+  /*   const [path, setPath] = useState([]);
+
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
+  }); */
 
   // Fetching the autocomplete suggestions
   const fetchSuggestions = async (input) => {
@@ -43,10 +65,15 @@ function App() {
       });
       console.log(response.data.routes[0].distanceMeters);
       setRoute(response.data.routes[0]);
+      // Decode the polyline
+      /*       const decodedPath = decode(route.polyline.encodedPolyline);
+      setPath(decodedPath.map(([lat, lng]) => ({ lat, lng }))); */
     } catch (error) {
       console.log(error);
     }
   };
+
+  // Decode the polyline
 
   // Handles the change event for the origin input field
   const handleOriginChange = (value) => {
@@ -72,6 +99,10 @@ function App() {
     }
     setSuggestions([]);
   };
+
+  /*   if (loadError) return <div>Error loading maps</div>;
+  if (!isLoaded) return <div>Loading Maps...</div>; */
+
 
   return (
     <div className="bg-black h-screen flex flex-col items-center">
@@ -127,9 +158,27 @@ function App() {
         <div className="text-white mt-5 text-center">
           <h2 className="text-bold">Route Details</h2>
           <p>Distance: {route.distanceMeters} meters</p>
-          <p>Duration: {route.duration} seconds</p>
+          <p>Duration: {route.duration}</p>{" "}
         </div>
       )}
+      {/*       <div className="mt-5 w-full px-4">
+        <GoogleMap
+          mapContainerStyle={mapContainerStyle}
+          zoom={12}
+          center={center}
+        >
+          {path.length > 0 && (
+            <Polyline
+              path={path}
+              options={{
+                strokeColor: "#FF0000",
+                strokeOpacity: 1.0,
+                strokeWeight: 2,
+              }}
+            />
+          )}
+        </GoogleMap>
+      </div> */}
     </div>
   );
 }
