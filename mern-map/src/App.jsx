@@ -92,8 +92,6 @@ function App() {
 
     useEffect(() => {
       if (!map) return;
-
-      // here you can interact with the imperative maps API
     }, [map]);
 
     return <></>;
