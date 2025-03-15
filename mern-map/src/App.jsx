@@ -1,6 +1,15 @@
 import "./App.css";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axiosInstance from "./axiosInstance";
+import axios from "axios";
+import {
+  APIProvider,
+  useMap,
+  Map,
+  AdvancedMarker,
+  Pin,
+  InfoWindow,
+} from "@vis.gl/react-google-maps";
 
 function App() {
   const [origin, setOrigin] = useState("");
@@ -13,6 +22,12 @@ function App() {
   const [error, setError] = useState(null);
 
   const fetchSuggestions = async (input) => {
+    const position = { lat: 37.76999, lng: -122.44696 };
+    const [latitude, longitude] = [position.lat, position.lng];
+    const center = { latitude, longitude };
+    const radius = 500.0;
+    const locationBias = { circle: { center, radius } };
+
     try {
       const response = await axiosInstance.post("/autocomplete", {
         input,
@@ -72,83 +87,113 @@ function App() {
     setSuggestions([]);
   };
 
+  const MyComponent = () => {
+    const map = useMap();
+
+    useEffect(() => {
+      if (!map) return;
+
+      // here you can interact with the imperative maps API
+    }, [map]);
+
+    return <></>;
+  };
+
   return (
-    <div className="bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          computeRoute();
-        }}
-        className="w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-lg"
-      >
-        <div className="mb-4">
-          <label className="block text-gray-300 text-sm font-bold mb-2">
-            Current Location:
-          </label>
-          <input
-            type="search"
-            onChange={(e) => handleOriginChange(e.target.value)}
-            value={origin}
-            className="w-full p-2 text-sm text-gray-700 bg-gray-200 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Where are you coming from?"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-300 text-sm font-bold mb-2">
-            Destination:
-          </label>
-          <input
-            type="search"
-            onChange={(e) => handleDestinationChange(e.target.value)}
-            value={destination}
-            className="w-full p-2 text-sm text-gray-700 bg-gray-200 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Where are you going to?"
-          />
-        </div>
-
-        {suggestions.length > 0 && (
-          <ul className="mt-2 bg-gray-700 rounded-md shadow-md">
-            {suggestions.map((suggestion) => (
-              <li
-                key={suggestion.placePrediction.place_id}
-                onClick={() => handleSuggestionClick(suggestion)}
-                className="p-2 text-gray-300 hover:bg-gray-600 cursor-pointer"
-              >
-                {suggestion.placePrediction.text.text}
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full mt-4 bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_API_KEY}>
+      <div className="bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            computeRoute();
+          }}
+          className="w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-lg"
         >
-          {loading ? "Calculating..." : "Calculate Route"}
-        </button>
-
-        {error && (
-          <div className="mt-4 text-red-500 text-sm text-center">{error}</div>
-        )}
-      </form>
-
-      {showRoute && route && (
-        <div className="mt-6 w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-lg text-white">
-          <h2 className="text-xl font-bold mb-4">Route Details</h2>
-          <div className="space-y-2">
-            <p className="text-sm">
-              <span className="font-semibold">Distance:</span>{" "}
-              {route.distanceMeters} meters
-            </p>
-            <p className="text-sm">
-              <span className="font-semibold">Duration:</span> {route.duration}
-            </p>
+          <div className="mb-4">
+            <label className="block text-gray-300 text-sm font-bold mb-2">
+              Current Location:
+            </label>
+            <input
+              type="search"
+              onChange={(e) => handleOriginChange(e.target.value)}
+              value={origin}
+              className="w-full p-2 text-sm text-gray-700 bg-gray-200 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Where are you coming from?"
+            />
           </div>
+
+          <div className="mb-4">
+            <label className="block text-gray-300 text-sm font-bold mb-2">
+              Destination:
+            </label>
+            <input
+              type="search"
+              onChange={(e) => handleDestinationChange(e.target.value)}
+              value={destination}
+              className="w-full p-2 text-sm text-gray-700 bg-gray-200 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Where are you going to?"
+            />
+          </div>
+
+          {suggestions.length > 0 && (
+            <ul className="mt-2 bg-gray-700 rounded-md shadow-md">
+              {suggestions.map((suggestion) => (
+                <li
+                  key={suggestion.placePrediction.place_id}
+                  onClick={() => handleSuggestionClick(suggestion)}
+                  className="p-2 text-gray-300 hover:bg-gray-600 cursor-pointer"
+                >
+                  {suggestion.placePrediction.text.text}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full mt-4 bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {loading ? "Calculating..." : "Calculate Route"}
+          </button>
+
+          {error && (
+            <div className="mt-4 text-red-500 text-sm text-center">{error}</div>
+          )}
+        </form>
+
+        {showRoute && route && (
+          <div className="mt-6 w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-lg text-white">
+            <h2 className="text-xl font-bold mb-4">Route Details</h2>
+            <div className="space-y-2">
+              <p className="text-sm">
+                <span className="font-semibold">Distance:</span>{" "}
+                {route.distanceMeters} meters
+              </p>
+              <p className="text-sm">
+                <span className="font-semibold">Duration:</span>{" "}
+                {route.duration}
+              </p>
+            </div>
+          </div>
+        )}
+        <div
+          className="mt-6 w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-lg text-white"
+          style={{ height: "400px" }}
+        >
+          <h2 className="text-xl font-bold mb-4">Map</h2>
+          <Map zoom={9} center={{ lat: 37.76999, lng: -122.44696 }}>
+            <MyComponent />
+            <AdvancedMarker position={{ lat: 37.76999, lng: -122.44696 }}>
+              <Pin />
+              <InfoWindow>
+                <div className="text-gray-800">Current Location</div>
+              </InfoWindow>
+            </AdvancedMarker>
+          </Map>
         </div>
-      )}
-    </div>
+      </div>
+    </APIProvider>
   );
 }
 
