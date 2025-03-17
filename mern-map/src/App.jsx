@@ -180,9 +180,14 @@ function App() {
           style={{ height: "400px" }}
         >
           <h2 className="text-xl font-bold mb-4">Map</h2>
-          <Map className="h-4/5" zoom={9} center={{ lat: 37.76999, lng: -122.44696 }}>
+          <Map
+            className="h-4/5"
+            zoom={9}
+            mapId={"mern-map"}
+            center={{ lat: 6.5244, lng: 3.3792 }}
+          >
             <MyComponent />
-            <AdvancedMarker position={{ lat: 37.76999, lng: -122.44696 }}>
+            <AdvancedMarker position={{ lat: 6.5244, lng: 3.3792 }}>
               <Pin />
               <InfoWindow>
                 <div className="text-gray-800">Current Location</div>
