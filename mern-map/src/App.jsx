@@ -10,6 +10,7 @@ import {
   Pin,
   InfoWindow,
 } from "@vis.gl/react-google-maps";
+import { decode, encode } from "@googlemaps/polyline-codec";
 
 function App() {
   const [origin, setOrigin] = useState("");
@@ -20,6 +21,7 @@ function App() {
   const [activeInput, setActiveInput] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [decodedPath, setDecodedPath] = useState([]);
 
   const fetchSuggestions = async (input) => {
     const position = { lat: 37.76999, lng: -122.44696 };
@@ -57,6 +59,9 @@ function App() {
       });
       setRoute(response.data.routes[0]);
       setShowRoute(true);
+      console.log("response.data.routes[0]:", response.data.routes[0]);
+      const encodedPolyline = response.data.routes[0].polyline.encodedPolyline;
+      console.log(decode(encodedPolyline, 5));
     } catch (error) {
       setError("Failed to compute route. Please try again.");
       console.error("Error computing route:", error);
