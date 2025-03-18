@@ -1,7 +1,6 @@
 import "./App.css";
 import React, { useState, useEffect } from "react";
 import axiosInstance from "./axiosInstance";
-import axios from "axios";
 import {
   APIProvider,
   useMap,
@@ -10,7 +9,6 @@ import {
   Pin,
   InfoWindow,
 } from "@vis.gl/react-google-maps";
-import { GoogleMap, useJsApiLoader, Polyline } from "@react-google-maps/api";
 import { decode, encode } from "@googlemaps/polyline-codec";
 
 function App() {
@@ -169,7 +167,9 @@ function App() {
 
         {showRoute && route && (
           <div className="mt-6 w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-lg text-white">
-            <h2 className="text-xl font-bold mb-4">Route Details (By Driving)</h2>
+            <h2 className="text-xl font-bold mb-4">
+              Route Details (By Driving)
+            </h2>
             <div className="space-y-2">
               <p className="text-sm">
                 <span className="font-semibold">Distance:</span>{" "}
@@ -184,7 +184,7 @@ function App() {
         )}
         <div
           className="mt-6 w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-lg text-white"
-          style={{ height: "100vh" }}
+          style={{ height: "70vh" }}
         >
           <h2 className="text-xl font-bold mb-4">Map</h2>
           {/*  <Map
