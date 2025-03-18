@@ -10,6 +10,7 @@ import {
   Pin,
   InfoWindow,
 } from "@vis.gl/react-google-maps";
+import { GoogleMap, useJsApiLoader, Polyline } from "@react-google-maps/api";
 import { decode, encode } from "@googlemaps/polyline-codec";
 
 function App() {
@@ -62,6 +63,7 @@ function App() {
       console.log("response.data.routes[0]:", response.data.routes[0]);
       const encodedPolyline = response.data.routes[0].polyline.encodedPolyline;
       console.log(decode(encodedPolyline, 5));
+      setDecodedPath(decode(encodedPolyline, 5));
     } catch (error) {
       setError("Failed to compute route. Please try again.");
       console.error("Error computing route:", error);
@@ -182,22 +184,43 @@ function App() {
         )}
         <div
           className="mt-6 w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-lg text-white"
-          style={{ height: "400px" }}
+          style={{ height: "100vh" }}
         >
           <h2 className="text-xl font-bold mb-4">Map</h2>
           <Map
             className="h-4/5"
-            zoom={9}
+            zoom={11}
             mapId={"mern-map"}
             center={{ lat: 6.5244, lng: 3.3792 }}
+            options={{
+              zoomControl: true,
+              mapTypeControl: true,
+              streetViewControl: true,
+              fullscreenControl: true,
+            }}
           >
+            <Polyline
+              path={decodedPath}
+              options={{
+                strokeColor: "#FF0000",
+                strokeOpacity: 1,
+                strokeWeight: 2,
+              }}
+            />
             <MyComponent />
-            <AdvancedMarker position={{ lat: 6.5244, lng: 3.3792 }}>
-              <Pin />
-              <InfoWindow>
-                <div className="text-gray-800">Current Location</div>
-              </InfoWindow>
-            </AdvancedMarker>
+
+            {decodedPath.length > 0 &&
+              decodedPath.map((coordinate, index) => (
+                <AdvancedMarker
+                  key={index}
+                  position={{ lat: coordinate[0], lng: coordinate[1] }}
+                >
+                  <Pin />
+                  <InfoWindow>
+                    <div className="text-gray-800">Coordinate {index}</div>
+                  </InfoWindow>
+                </AdvancedMarker>
+              ))}
           </Map>
         </div>
       </div>
