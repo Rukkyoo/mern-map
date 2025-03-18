@@ -169,7 +169,7 @@ function App() {
 
         {showRoute && route && (
           <div className="mt-6 w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-lg text-white">
-            <h2 className="text-xl font-bold mb-4">Route Details</h2>
+            <h2 className="text-xl font-bold mb-4">Route Details (By Driving)</h2>
             <div className="space-y-2">
               <p className="text-sm">
                 <span className="font-semibold">Distance:</span>{" "}
@@ -187,11 +187,11 @@ function App() {
           style={{ height: "100vh" }}
         >
           <h2 className="text-xl font-bold mb-4">Map</h2>
-          <Map
+          {/*  <Map
             className="h-4/5"
-            zoom={11}
+            zoom={6}
             mapId={"mern-map"}
-            center={{ lat: 6.5244, lng: 3.3792 }}
+            center={{ lat: 9.0820, lng: 8.6753 }}
             options={{
               zoomControl: true,
               mapTypeControl: true,
@@ -199,16 +199,27 @@ function App() {
               fullscreenControl: true,
             }}
           >
-            <Polyline
-              path={decodedPath}
-              options={{
-                strokeColor: "#FF0000",
-                strokeOpacity: 1,
-                strokeWeight: 2,
-              }}
-            />
             <MyComponent />
-
+            {decodedPath.length > 0 &&
+              decodedPath.map((coordinate, index) => (
+                <AdvancedMarker
+                  key={index}
+                  position={{ lat: coordinate[0], lng: coordinate[1] }}
+                >
+                  <Pin />
+                  <InfoWindow>
+                    <div className="text-gray-800">Coordinate {index}</div>
+                  </InfoWindow>
+                </AdvancedMarker>
+              ))}
+          </Map> */}
+          <Map
+            className="h-4/5"
+            defaultCenter={{ lat: 9.082, lng: 8.6753 }}
+            defaultZoom={5}
+            mapId={"mern-map"}
+          >
+            <MyComponent />
             {decodedPath.length > 0 &&
               decodedPath.map((coordinate, index) => (
                 <AdvancedMarker
