@@ -183,7 +183,7 @@ const MappingComponent = () => {
           style={{ height: "70vh" }}
         >
           <h2 className="text-xl font-bold mb-4">Map</h2>
-           <Map
+          {/*  <Map
               className="h-4/5"
               zoom={6}
               mapId={"mern-map"}
@@ -208,8 +208,8 @@ const MappingComponent = () => {
                     </InfoWindow>
                   </AdvancedMarker>
                 ))}
-            </Map>
-          {/* <Map
+            </Map> */}
+          <Map
             className="h-4/5"
             defaultCenter={{ lat: 9.082, lng: 8.6753 }}
             defaultZoom={5}
@@ -228,7 +228,7 @@ const MappingComponent = () => {
                   </InfoWindow>
                 </AdvancedMarker>
               ))}
-          </Map> */}
+          </Map>
         </div>
       </div>
     </APIProvider>
