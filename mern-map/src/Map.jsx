@@ -156,9 +156,9 @@ const MappingComponent = () => {
             {loading ? "Calculating..." : "Calculate Route"}
           </button>
 
-          {error && (
+         {/*  {error && (
             <div className="mt-4 text-red-500 text-sm text-center">{error}</div>
-          )}
+          )} */}
         </form>
 
         {showRoute && route && (
