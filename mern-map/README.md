@@ -86,7 +86,7 @@ MappingComponent (Main)
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone <https://github.com/Rukkyoo/mern-map.git>
    cd mern-map
    ```
 
@@ -175,9 +175,6 @@ npm start            # Start backend server (if needed)
 - Check if Leaflet CSS is properly imported
 - Ensure container has proper height/width
 
-**Tests failing?**
-- Run `npm install` to ensure all test dependencies are installed
-- Check if Jest configuration is correct
 
 ## 🤝 Contributing
 
