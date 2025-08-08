@@ -1,237 +1,140 @@
-import "./App.css";
-import React, { useState, useEffect } from "react";
-import axiosInstance from "./axiosInstance";
-import {
-  APIProvider,
-  useMap,
-  Map,
-  AdvancedMarker,
-  Pin,
-  InfoWindow,
-} from "@vis.gl/react-google-maps";
-import { decode } from "@googlemaps/polyline-codec";
+import React, { useState, useCallback, useEffect } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Import components
+import RouteForm from './components/RouteForm';
+import RouteInfo from './components/RouteInfo';
+import MapView from './components/MapView';
+
+// Import hooks
+import { useGeocoding } from './hooks/useGeocoding';
+import { useRouting } from './hooks/useRouting';
+
+// Import marker icons
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+// Fix default icon issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
 const MappingComponent = () => {
-  const [origin, setOrigin] = useState("");
-  const [destination, setDestination] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const [route, setRoute] = useState(null);
-  const [showRoute, setShowRoute] = useState(false);
+  // Location states
+  const [origin, setOrigin] = useState('');
+  const [destination, setDestination] = useState('');
   const [activeInput, setActiveInput] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [decodedPath, setDecodedPath] = useState([]);
+  const [originCoords, setOriginCoords] = useState(null);
+  const [destinationCoords, setDestinationCoords] = useState(null);
 
-  const fetchSuggestions = async (input) => {
-    try {
-      const response = await axiosInstance.post("/autocomplete", {
-        input,
-        locationBias: {
-          circle: {
-            center: {
-              latitude: 37.76999,
-              longitude: -122.44696,
-            },
-            radius: 500.0,
-          },
-        },
-      });
-      setSuggestions(response.data.suggestions);
-    } catch (error) {
-      console.error("Error fetching suggestions:", error);
+  // Custom hooks
+  const { 
+    suggestions, 
+    isLoading: isGeocodingLoading, 
+    searchLocations, 
+    clearSuggestions 
+  } = useGeocoding();
+  
+  const { 
+    coordinates, 
+    distance, 
+    duration, 
+    isLoading: isRoutingLoading, 
+    calculateRoute, 
+    clearRoute 
+  } = useRouting();
+
+  // Debounced search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (activeInput === 'origin' && origin.length >= 3) {
+        searchLocations(origin);
+      } else if (activeInput === 'destination' && destination.length >= 3) {
+        searchLocations(destination);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [origin, destination, activeInput, searchLocations]);
+
+  const handleInputChange = useCallback((value, inputType) => {
+    if (inputType === 'origin') {
+      setOrigin(value);
+      if (value !== origin) {
+        setOriginCoords(null);
+        clearRoute();
+      }
+    } else {
+      setDestination(value);
+      if (value !== destination) {
+        setDestinationCoords(null);
+        clearRoute();
+      }
     }
-  };
+    setActiveInput(inputType);
+  }, [origin, destination, clearRoute]);
 
-  const computeRoute = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await axiosInstance.post("/route", {
-        origin,
-        destination,
-      });
-      setRoute(response.data.routes[0]);
-      setShowRoute(true);
-      console.log("response.data.routes[0]:", response.data.routes[0]);
-      const encodedPolyline = response.data.routes[0].polyline.encodedPolyline;
-      console.log(decode(encodedPolyline, 5));
-      setDecodedPath(decode(encodedPolyline, 5));
-      const time = response.data.routes[0].legs[0].duration.text;
-      console.log("time:", time);
-    } catch (error) {
-      setError("Failed to compute route. Please try again.");
-      console.error("Error computing route:", error);
-    } finally {
-      setLoading(false);
+  const handleSuggestionClick = useCallback((suggestion) => {
+    const { coordinates } = suggestion.geometry;
+    const name = suggestion.properties.name || suggestion.properties.label;
+
+    if (activeInput === 'origin') {
+      setOrigin(name);
+      setOriginCoords([coordinates[1], coordinates[0]]); // Convert to [lat, lon]
+    } else {
+      setDestination(name);
+      setDestinationCoords([coordinates[1], coordinates[0]]); // Convert to [lat, lon]
     }
-  };
 
-  const handleOriginChange = (value) => {
-    setOrigin(value);
-    setActiveInput("origin");
-    fetchSuggestions(value);
-  };
+    clearSuggestions();
+    setActiveInput(null);
+  }, [activeInput, clearSuggestions]);
 
-  const handleDestinationChange = (value) => {
-    setDestination(value);
-    setActiveInput("destination");
-    fetchSuggestions(value);
-  };
-
-  const handleSuggestionClick = (suggestion) => {
-    const selectedText = suggestion.placePrediction.text.text;
-    if (activeInput === "origin") {
-      setOrigin(selectedText);
-    } else if (activeInput === "destination") {
-      setDestination(selectedText);
+  const handleRouteCalculation = useCallback(() => {
+    if (!originCoords || !destinationCoords) {
+      alert('Please select both origin and destination locations');
+      return;
     }
-    setSuggestions([]);
-  };
-
-  const MyComponent = () => {
-    const map = useMap();
-
-    useEffect(() => {
-      if (!map) return;
-    }, [map]);
-
-    return <></>;
-  };
+    calculateRoute(originCoords, destinationCoords);
+  }, [originCoords, destinationCoords, calculateRoute]);
 
   return (
-    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_API_KEY}>
-      <div className="bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            computeRoute();
-          }}
-          className="w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-lg"
-        >
-          <div className="mb-4">
-            <label className="block text-gray-300 text-sm font-bold mb-2">
-              Current Location:
-            </label>
-            <input
-              type="search"
-              onChange={(e) => handleOriginChange(e.target.value)}
-              value={origin}
-              className="w-full p-2 text-sm text-gray-700 bg-gray-200 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Where are you coming from?"
+    <div className="bg-gray-900 min-h-screen p-4 flex flex-col items-center">
+      <div className="w-full max-w-6xl">
+        <h1 className="text-3xl font-bold text-white text-center mb-8">
+          Route Planner
+        </h1>
+        
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
+          <div className="flex-shrink-0">
+            <RouteForm
+              origin={origin}
+              destination={destination}
+              suggestions={suggestions}
+              onInputChange={handleInputChange}
+              onSuggestionClick={handleSuggestionClick}
+              onSubmit={handleRouteCalculation}
+              isLoading={isRoutingLoading || isGeocodingLoading}
+            />
+            
+            <RouteInfo distance={distance} duration={duration} />
+          </div>
+          
+          <div className="flex-1 w-full">
+            <MapView
+              originCoords={originCoords}
+              destinationCoords={destinationCoords}
+              coordinates={coordinates}
             />
           </div>
-
-          <div className="mb-4">
-            <label className="block text-gray-300 text-sm font-bold mb-2">
-              Destination:
-            </label>
-            <input
-              type="search"
-              onChange={(e) => handleDestinationChange(e.target.value)}
-              value={destination}
-              className="w-full p-2 text-sm text-gray-700 bg-gray-200 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Where are you going to?"
-            />
-          </div>
-
-          {suggestions.length > 0 && (
-            <ul className="mt-2 bg-gray-700 rounded-md shadow-md">
-              {suggestions.map((suggestion) => (
-                <li
-                  key={suggestion.placePrediction.place_id}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                  className="p-2 text-gray-300 hover:bg-gray-600 cursor-pointer"
-                >
-                  {suggestion.placePrediction.text.text}
-                </li>
-              ))}
-            </ul>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full mt-4 bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {loading ? "Calculating..." : "Calculate Route"}
-          </button>
-
-         {/*  {error && (
-            <div className="mt-4 text-red-500 text-sm text-center">{error}</div>
-          )} */}
-        </form>
-
-        {showRoute && route && (
-          <div className="mt-6 w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-lg text-white">
-            <h2 className="text-xl font-bold mb-4">
-              Route Details (By Driving)
-            </h2>
-            <div className="space-y-2">
-              <p className="text-sm">
-                <span className="font-semibold">Distance:</span>{" "}
-                {route.distanceMeters} meters
-              </p>
-              <p className="text-sm">
-                <span className="font-semibold">Duration:</span>{" "}
-                {route.duration}
-              </p>
-            </div>
-          </div>
-        )}
-        <div
-          className="mt-6 w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-lg text-white"
-          style={{ height: "70vh" }}
-        >
-          <h2 className="text-xl font-bold mb-4">Map</h2>
-          {/*  <Map
-              className="h-4/5"
-              zoom={6}
-              mapId={"mern-map"}
-              center={{ lat: 9.0820, lng: 8.6753 }}
-              options={{
-                zoomControl: true,
-                mapTypeControl: true,
-                streetViewControl: true,
-                fullscreenControl: true,
-              }}
-            >
-              <MyComponent />
-              {decodedPath.length > 0 &&
-                decodedPath.map((coordinate, index) => (
-                  <AdvancedMarker
-                    key={index}
-                    position={{ lat: coordinate[0], lng: coordinate[1] }}
-                  >
-                    <Pin />
-                    <InfoWindow>
-                      <div className="text-gray-800">Coordinate {index}</div>
-                    </InfoWindow>
-                  </AdvancedMarker>
-                ))}
-            </Map> */}
-          <Map
-            className="h-4/5"
-            defaultCenter={{ lat: 9.082, lng: 8.6753 }}
-            defaultZoom={5}
-            mapId={"mern-map"}
-          >
-            <MyComponent />
-            {decodedPath.length > 0 &&
-              decodedPath.map((coordinate, index) => (
-                <AdvancedMarker
-                  key={index}
-                  position={{ lat: coordinate[0], lng: coordinate[1] }}
-                >
-                  <Pin />
-                  <InfoWindow>
-                    <div className="text-gray-800">Coordinate {index}</div>
-                  </InfoWindow>
-                </AdvancedMarker>
-              ))}
-          </Map>
         </div>
       </div>
-    </APIProvider>
+    </div>
   );
 };
 

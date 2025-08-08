@@ -1,144 +1,221 @@
-# MERN Map - Route Calculation Application
+# 🗺️ MERN Map - Route Planner Application
 
-## Overview
+A modern, responsive route planning application built with React, Leaflet, and multiple routing APIs. Features intelligent autocomplete, multiple API fallbacks, and a clean component-based architecture.
 
-MERN Map is a full-stack web application that provides route calculation and mapping functionality using Google Maps APIs. The application allows users to:
-- Search for locations with autocomplete suggestions
-- Calculate driving routes between two points
-- View route details including distance and duration
-- Visualize the route on an interactive map
+![Route Planner Demo](https://img.shields.io/badge/Status-Active-green) ![React](https://img.shields.io/badge/React-19.0.0-blue) ![Leaflet](https://img.shields.io/badge/Leaflet-1.9.4-green)
 
-## Features
+## ✨ Features
 
-### Frontend Features
-- **Location Search** with autocomplete suggestions
-- **Route Calculation** between origin and destination
-- **Interactive Map** displaying the calculated route
-- **Route Details** showing distance and duration
-- **Responsive Design** that works on various screen sizes
-- **Visual Markers** along the calculated route
+### 🎯 Core Functionality
+- **Smart Location Search**: Autocomplete with debounced search (300ms delay)
+- **Multiple API Fallbacks**: Robust routing with automatic fallback systems
+- **Interactive Map**: Leaflet-powered map with auto-fitting bounds
+- **Real-time Route Calculation**: Distance and duration display
+- **Responsive Design**: Works on desktop and mobile devices
 
-### Backend Features
-- **Autocomplete API Endpoint** for location suggestions
-- **Route Computation API Endpoint** for calculating routes
-- **Error Handling** for API failures
-- **CORS Support** for cross-origin requests
+### 🛡️ Reliability Features
+- **API Fallback Chain**: 
+  - Geocoding: Photon API → Nominatim API
+  - Routing: OpenRouteService → OSRM → Straight Line
+- **Error Handling**: Graceful degradation when services fail
+- **Loading States**: Visual feedback during API calls
+- **Input Validation**: Prevents invalid route calculations
 
-## Technologies Used
+### 🎨 User Experience
+- **Modern UI**: Clean design with Tailwind CSS v4
+- **Hover Effects**: Interactive suggestions and buttons
+- **Auto-fitting Map**: Automatically zooms to show entire route
+- **Visual Route Display**: Blue polyline with origin/destination markers
 
-### Frontend
-- **React** (v19.0.0) - JavaScript library for building user interfaces
-- **Vite** (v6.2.0) - Next-generation frontend tooling
-- **@vis.gl/react-google-maps** (v1.5.1) - React components for Google Maps
-- **Tailwind CSS** (v4.0.12) - Utility-first CSS framework
-- **Axios** (v1.8.2) - HTTP client for API requests
-- **@googlemaps/polyline-codec** (v1.0.28) - For decoding polyline data
+## 🏗️ Architecture
 
-### Backend
-- **Express.js** - Web application framework for Node.js
-- **CORS** - Middleware for enabling Cross-Origin Resource Sharing
-- **Dotenv** - For loading environment variables
-- **Axios** - For making requests to Google Maps APIs
+### 📁 Project Structure
+```
+mern-map/
+├── src/
+│   ├── components/           # UI Components (Reusable)
+│   │   ├── LocationInput.jsx     # Input field for locations
+│   │   ├── SuggestionsList.jsx   # Autocomplete dropdown
+│   │   ├── RouteForm.jsx         # Form with inputs + button
+│   │   ├── RouteInfo.jsx         # Distance/duration display
+│   │   └── MapView.jsx           # Leaflet map component
+│   │
+│   ├── hooks/               # Custom Logic Hooks
+│   │   ├── useGeocoding.js      # Location search logic
+│   │   └── useRouting.js        # Route calculation logic
+│   │
+│   ├── __tests__/           # Test Suite
+│   │   ├── components/          # Component tests
+│   │   ├── hooks/              # Hook tests
+│   │   ├── setup.js            # Test configuration
+│   │   └── Map.integration.test.jsx # Integration tests
+│   │
+│   ├── Map.jsx              # Main component
+│   ├── App.jsx              # App entry point
+│   └── index.css            # Global styles
+│
+├── backend/                 # Express server (optional)
+├── jest.config.js          # Test configuration
+└── package.json            # Dependencies
+```
 
-### Development Tools
-- **ESLint** - JavaScript linter
-- **Nodemon** - For automatic server restarts during development
-- **Vite** - Fast development server and build tool
+### 🧩 Component Architecture
 
-## Installation
+#### **Separation of Concerns**
+- **Components Folder**: UI elements (what users see and interact with)
+- **Hooks Folder**: Business logic (API calls, state management, data processing)
 
-1. Clone the repository:
+#### **Component Hierarchy**
+```
+MappingComponent (Main)
+├── RouteForm
+│   ├── LocationInput (Origin)
+│   ├── LocationInput (Destination)
+│   └── SuggestionsList
+├── RouteInfo
+└── MapView
+```
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v16 or higher)
+- npm or yarn
+
+### Installation
+
+1. **Clone the repository**
    ```bash
-   git clone [https://github.com/Rukkyoo/mern-map]
+   git clone <your-repo-url>
+   cd mern-map
    ```
 
-2. Install dependencies for both frontend and backend:
+2. **Install dependencies**
    ```bash
    npm install
-   cd frontend
-   npm install
    ```
 
-3. Create a `.env` file in the root directory with your Google Maps API key:
-   ```
-   GOOGLE_API_KEY=your_api_key_here
-   VITE_GOOGLE_API_KEY=your_api_key_here
-   PORT=8000
-   ```
-
-4. Start the development servers:
+3. **Set up environment variables** (Optional)
    ```bash
-   # In root directory (backend)
-   npm start
-   
-   # In frontend directory
+   # Create .env file
+   VITE_ORS_API_KEY=your_openrouteservice_api_key
+   ```
+   > **Note**: The app works without API keys using free fallback services
+
+4. **Start development server**
+   ```bash
    npm run dev
    ```
 
-## Available Scripts
-
-- `npm run dev`: Starts the Vite development server (frontend)
-- `npm start`: Starts the Express server (backend)
-- `npm run build`: Creates a production build (frontend)
-- `npm run lint`: Runs ESLint
-- `npm run preview`: Previews the production build
+5. **Open in browser**
+   ```
+   http://localhost:5173
+   ```
 
 
-## API Endpoints
+## 🔧 API Services
 
-### Backend API
-- `POST /api/autocomplete` - Returns location suggestions
-  - Request body: `{ input: "search term" }`
-  - Response: Google Places API autocomplete suggestions
+### Geocoding (Location Search)
+1. **Primary**: [Photon API](https://photon.komoot.io/) - Free, no API key required
+2. **Fallback**: [Nominatim API](https://nominatim.openstreetmap.org/) - Free, no API key required
 
-- `POST /api/route` - Calculates route between two points
-  - Request body: `{ origin: "location", destination: "location" }`
-  - Response: Route information including distance, duration, and polyline
+### Routing (Route Calculation)
+1. **Primary**: [OpenRouteService](https://openrouteservice.org/) - Requires API key
+2. **Fallback**: [OSRM](http://project-osrm.org/) - Free, no API key required
+3. **Last Resort**: Straight line calculation using Haversine formula
 
-## Environment Variables
+## 🛠️ Development
 
-- `GOOGLE_API_KEY` - Your Google Maps API key (backend)
-- `VITE_GOOGLE_API_KEY` - Your Google Maps API key (frontend)
-- `PORT` - Port for the Express server (default: 8000)
+### Available Scripts
 
-## Dependencies
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run lint         # Run ESLint
+npm start            # Start backend server (if needed)
+```
 
-### Production Dependencies
-- `@googlemaps/polyline-codec`: ^1.0.28
-- `@react-google-maps/api`: ^2.20.6
-- `@tailwindcss/vite`: ^4.0.12
-- `@vis.gl/react-google-maps`: ^1.5.1
-- `axios`: ^1.8.2
-- `cors`: ^2.8.5
-- `dotenv`: ^16.4.7
-- `express`: ^4.21.2
-- `js-marker-clusterer`: github:googlemaps/markerclusterer
-- `nodemon`: ^3.1.9
-- `react`: ^19.0.0
-- `react-dom`: ^19.0.0
-- `tailwindcss`: ^4.0.12
+### Key Technologies
+- **Frontend**: React 19, Leaflet, Tailwind CSS v4
+- **HTTP Client**: Axios
+- **Build Tool**: Vite
+- **Backend**: Express.js (optional)
 
-### Development Dependencies
-- `@eslint/js`: ^9.21.0
-- `@types/react`: ^19.0.10
-- `@types/react-dom`: ^19.0.4
-- `@vitejs/plugin-react`: ^4.3.4
-- `eslint`: ^9.21.0
-- `eslint-plugin-react-hooks`: ^5.1.0
-- `eslint-plugin-react-refresh`: ^0.4.19
-- `globals`: ^15.15.0
-- `vite`: ^6.2.0
+## 🎯 Usage Examples
 
-## License
+### Basic Usage
+1. Type a location in the "Origin" field
+2. Select from autocomplete suggestions
+3. Type a destination in the "Destination" field
+4. Select from autocomplete suggestions
+5. Click "Calculate Route"
+6. View route on map with distance/duration info
 
-This project is open-source and available for use under the MIT License.
+### Advanced Features
+- **Debounced Search**: Wait 300ms after typing before searching
+- **Auto-fitting Map**: Map automatically zooms to show entire route
+- **Error Recovery**: App continues working even if some APIs fail
+- **Loading States**: Visual feedback during API calls
 
-## Future Enhancements
+## 🔍 Troubleshooting
 
-1. Add multiple travel modes (walking, bicycling, transit)
-2. Implement waypoints for multi-stop routes
-3. Add route optimization features
-4. Include traffic information
-5. Add user authentication for saving favorite routes
-6. Implement offline map caching
-7. Add route sharing functionality
+### Common Issues
+
+**Autocomplete not working?**
+- Check internet connection
+- Both Photon and Nominatim APIs are free and should work without keys
+
+**Route calculation failing?**
+- Ensure both origin and destination are selected
+- App will fall back to OSRM if OpenRouteService fails
+- Last resort: straight line distance calculation
+
+**Map not displaying?**
+- Check if Leaflet CSS is properly imported
+- Ensure container has proper height/width
+
+**Tests failing?**
+- Run `npm install` to ensure all test dependencies are installed
+- Check if Jest configuration is correct
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass (`npm test`)
+6. Commit your changes (`git commit -m 'Add amazing feature'`)
+7. Push to the branch (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
+
+### Development Guidelines
+- Write tests for new components and hooks
+- Follow the existing component/hook separation pattern
+- Use TypeScript-style JSDoc comments
+- Ensure responsive design
+- Test with multiple API failure scenarios
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [OpenStreetMap](https://www.openstreetmap.org/) for map data
+- [Leaflet](https://leafletjs.com/) for the mapping library
+- [Photon](https://photon.komoot.io/) for geocoding services
+- [OSRM](http://project-osrm.org/) for routing services
+- [OpenRouteService](https://openrouteservice.org/) for premium routing
+
+## 📞 Support
+
+If you have any questions or need help:
+1. Check the [Issues](../../issues) page
+2. Create a new issue with detailed description
+3. Include steps to reproduce any bugs
+
+---
+
+**Built with ❤️ using React and modern web technologies**
